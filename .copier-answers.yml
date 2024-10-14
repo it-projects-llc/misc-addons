@@ -20,6 +20,6 @@ repo_description: ''
 repo_name: ''
 repo_slug: misc-addons
 repo_website: https://github.com/it-projects-llc/misc-addons
-use_pyproject_toml: false
+use_pyproject_toml: true
 use_ruff: false
 
