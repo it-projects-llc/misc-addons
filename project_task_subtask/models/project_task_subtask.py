@@ -285,9 +285,8 @@ class Task(models.Model):
                 partner_ids = [user.partner_id.id]
             elif self.env.user == user:
                 body = Markup(
-                    "<p>"
-                    + escape(reviewer.name)
-                    + ', <em style="color:#999">I updated checklist item assigned to me:</em> <br><strong>'
+                    "<p>" + escape(reviewer.name) + ', <em style="color:#999">'
+                    "I updated checklist item assigned to me:</em> <br><strong>"
                     + str(state)
                     + "</strong>: "
                     + escape(subtask_name)
