@@ -130,10 +130,10 @@ class Task(models.Model):
     _inherit = "project.task"
 
     subtask_ids = fields.One2many("project.task.subtask", "task_id", "Subtask")
-    kanban_subtasks = fields.Text(compute="_compute_kanban_subtasks")
+    kanban_subtasks = fields.Html(compute="_compute_kanban_subtasks")
     default_user = fields.Many2one("res.users", compute="_compute_default_user")
     completion = fields.Integer(compute="_compute_completion")
-    completion_xml = fields.Text(compute="_compute_completion_xml")
+    completion_xml = fields.Html(compute="_compute_completion_xml")
 
     def _compute_default_user(self):
         for record in self:
