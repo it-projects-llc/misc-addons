@@ -1,4 +1,4 @@
-from markupsafe import Markup, escape
+from markupsafe import Markup
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -10,10 +10,6 @@ SUBTASK_STATES = {
     "waiting": "Waiting",
     "cancelled": "Cancelled",
 }
-
-
-# def escape(s):
-#     return str(html_escape(s))
 
 
 class ProjectTaskSubtask(models.Model):
@@ -47,17 +43,18 @@ class ProjectTaskSubtask(models.Model):
 
     def _compute_recolor(self):
         for record in self:
-            if self.env.user == record.user_id and record.state == "todo":
-                record.recolor = True
-            else:
-                record.recolor = False
+            record.recolor = (
+                True
+                if self.env.user == record.user_id and record.state == "todo"
+                else False
+            )
 
     def _compute_hide_button(self):
         for record in self:
-            if self.env.user not in [record.reviewer_id, record.user_id]:
-                record.hide_button = True
-            else:
-                record.hide_button = False
+            record.hide_button = self.env.user not in [
+                record.reviewer_id,
+                record.user_id,
+            ]
 
     def _compute_reviewer_id(self):
         for record in self:
@@ -128,7 +125,6 @@ class ProjectTaskSubtask(models.Model):
 
 class Task(models.Model):
     _inherit = "project.task"
-
     subtask_ids = fields.One2many("project.task.subtask", "task_id", "Subtask")
     kanban_subtasks = fields.Html(compute="_compute_kanban_subtasks")
     default_user = fields.Many2one("res.users", compute="_compute_default_user")
@@ -246,88 +242,7 @@ class Task(models.Model):
         subtask_user_id,
         old_name=None,
     ):
-        for r in self:
-            body = Markup("")  # Initialize body as a Markup object
-            reviewer = self.env["res.users"].browse(subtask_reviewer_id)
-            user = self.env["res.users"].browse(subtask_user_id)
-            state = Markup(SUBTASK_STATES[subtask_state])  # Keep state as Markup
+        state = Markup(SUBTASK_STATES[subtask_state])
 
-            # Set state color based on subtask state
-            if subtask_state == "done":
-                state = Markup('<span style="color:#080">' + str(state) + "</span>")
-            elif subtask_state == "todo":
-                state = Markup('<span style="color:#A00">' + str(state) + "</span>")
-            elif subtask_state == "cancelled":
-                state = Markup('<span style="color:#777">' + str(state) + "</span>")
-            elif subtask_state == "waiting":
-                state = Markup('<span style="color:#b818ce">' + str(state) + "</span>")
-
-            partner_ids = []
-
-            if user == self.env.user and reviewer == self.env.user:
-                body = Markup(
-                    "<p><strong>"
-                    + str(state)
-                    + "</strong>: "
-                    + escape(subtask_name)
-                    + "</p>"
-                )
-            elif self.env.user == reviewer:
-                body = Markup(
-                    "<p>"
-                    + escape(user.name)
-                    + ", <br><strong>"
-                    + str(state)
-                    + "</strong>: "
-                    + escape(subtask_name)
-                    + "</p>"
-                )
-                partner_ids = [user.partner_id.id]
-            elif self.env.user == user:
-                body = Markup(
-                    "<p>" + escape(reviewer.name) + ', <em style="color:#999">'
-                    "I updated checklist item assigned to me:</em> <br><strong>"
-                    + str(state)
-                    + "</strong>: "
-                    + escape(subtask_name)
-                    + "</p>"
-                )
-                partner_ids = [reviewer.partner_id.id]
-            else:
-                body = Markup(
-                    "<p>"
-                    + escape(user.name)
-                    + ", "
-                    + escape(reviewer.name)
-                    + ', <em style="color:#999">I updated checklist item, now its assigned to '
-                    + escape(user.name)
-                    + ": </em> <br><strong>"
-                    + str(state)
-                    + "</strong>: "
-                    + escape(subtask_name)
-                    + "</p>"
-                )
-                partner_ids = [user.partner_id.id, reviewer.partner_id.id]
-
-            if old_name:
-                body += Markup(
-                    '<br><em style="color:#999">Updated from</em><br><strong>'
-                    + str(state)
-                    + "</strong>: "
-                    + escape(old_name)
-                    + "</p>"
-                )
-            else:
-                body += Markup("</p>")
-
-            r.message_post(
-                message_type="comment",
-                body=body,
-                partner_ids=partner_ids,
-            )
-
-    def copy(self, default=None):
-        task = super(Task, self).copy(default)
-        for subtask in self.subtask_ids:
-            subtask.copy({"task_id": task.id, "state": subtask.state})
-        return task
+        if subtask_state == "done":
+            state = Markup('<span style="color:#080')
