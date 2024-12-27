@@ -128,10 +128,7 @@ class ProjectTaskSubtask(models.Model):
 class Task(models.Model):
     _inherit = "project.task"
     subtask_ids = fields.One2many("project.task.subtask", "task_id", "Subtask")
-    kanban_subtasks = fields.Text(compute="_compute_kanban_subtasks")
     default_user = fields.Many2one("res.users", compute="_compute_default_user")
-    completion = fields.Integer(compute="_compute_completion")
-    completion_xml = fields.Text(compute="_compute_completion_xml")
 
     def _compute_default_user(self):
         for record in self:
@@ -153,75 +150,6 @@ class Task(models.Model):
                         record.default_user = self.env.user
             else:
                 record.default_user = False
-
-    def _compute_kanban_subtasks(self):
-        for record in self:
-            result_string_td = ""
-            result_string_wt = ""
-            if record.subtask_ids:
-                task_todo_ids = record.subtask_ids.filtered(
-                    lambda x: x.state == "todo" and x.user_id.id == record.env.user.id
-                )
-                task_waiting_ids = record.subtask_ids.filtered(
-                    lambda x: x.state == "waiting"
-                    and x.user_id.id == record.env.user.id
-                )
-                if task_todo_ids:
-                    tmp_string_td = escape(": {}".format(len(task_todo_ids)))
-                    result_string_td += "<li><b>TODO{}</b></li>".format(tmp_string_td)
-                if task_waiting_ids:
-                    tmp_string_wt = escape(": {}".format(len(task_waiting_ids)))
-                    result_string_wt += "<li><b>Waiting{}</b></li>".format(
-                        tmp_string_wt
-                    )
-            record.kanban_subtasks = (
-                '<div class="kanban_subtasks"><ul>'
-                + result_string_td
-                + result_string_wt
-                + "</ul></div>"
-            )
-
-    def _compute_completion(self):
-        for record in self:
-            record.completion = record.task_completion()
-
-    def _compute_completion_xml(self):
-        for record in self:
-            active_subtasks = record.subtask_ids and record.subtask_ids.filtered(
-                lambda x: x.user_id.id == record.env.user.id and x.state != "cancelled"
-            )
-            if not active_subtasks:
-                record.completion_xml = """
-                    <div class="task_progress">
-                    </div>
-                    """
-                continue
-
-            completion = record.task_completion()
-            color = "bg-success-full"
-            if completion < 50:
-                color = "bg-danger-full"
-            record.completion_xml = """
-            <div class="task_progress">
-                <div class="progress_info">
-                    Your Checklist:
-                </div>
-                <div class ="o_kanban_counter_progress progress task_progress_bar">
-                    <div data-filter="done"
-                         class ="progress-bar {1} o_bar_has_records task_progress_bar_done"
-                         data-original-title="1 done"
-                         style="width: {0}%;">
-                    </div>
-                    <div data-filter="blocked"
-                         class ="progress-bar bg-danger-full"
-                         data-original-title="0 blocked">
-                    </div>
-                </div>
-                <div class="task_completion"> {0}% </div>
-            </div>
-            """.format(
-                int(completion), color
-            )
 
     def task_completion(self):
         user_task_ids = self.subtask_ids.filtered(
