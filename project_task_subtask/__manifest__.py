@@ -12,7 +12,6 @@
     "data": [
         "security/ir.model.access.csv",
         "views/project_task_subtask.xml",
-        "data/subscription_template.xml",
     ],
     "assets": {
         "web.assets_backend": [

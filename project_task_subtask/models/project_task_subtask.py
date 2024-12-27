@@ -182,10 +182,8 @@ class Task(models.Model):
             if subtask_state == "waiting":
                 state = '<span style="color:#b818ce">' + state + "</span>"
             partner_ids = []
-            subtype = "project_task_subtask.subtasks_subtype"
             if user == self.env.user and reviewer == self.env.user:
                 body = "<p>" + "<strong>" + state + "</strong>: " + escape(subtask_name)
-                subtype = False
             elif self.env.user == reviewer:
                 body = (
                     "<p>"
@@ -233,7 +231,6 @@ class Task(models.Model):
                 body = body + "</p>"
             r.message_post(
                 message_type="comment",
-                subtime_xmlid=subtype,
                 body=body,
                 partner_ids=partner_ids,
             )
