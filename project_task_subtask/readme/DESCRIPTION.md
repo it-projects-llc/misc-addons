@@ -10,6 +10,7 @@ Features:
 
  * DONE
  * TODO
+ * Waiting
  * CANCELLED
 
 * Added new "Checklist" menu
