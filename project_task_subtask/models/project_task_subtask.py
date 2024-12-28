@@ -1,6 +1,7 @@
+from markupsafe import Markup, escape
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
-from odoo.tools import html_escape
 from odoo.tools.translate import _
 
 SUBTASK_STATES = {
@@ -9,10 +10,6 @@ SUBTASK_STATES = {
     "waiting": "Waiting",
     "cancelled": "Cancelled",
 }
-
-
-def escape(s):
-    return str(html_escape(s))
 
 
 class ProjectTaskSubtask(models.Model):
@@ -35,7 +32,7 @@ class ProjectTaskSubtask(models.Model):
     )
     user_id = fields.Many2one("res.users", "Assigned to", required=True)
     task_id = fields.Many2one(
-        "project.task", "Task", ondelete="cascade", required=True, index="1"
+        "project.task", "Task", ondelete="cascade", required=True, index=True
     )
     task_state = fields.Char(
         string="Task state", related="task_id.stage_id.name", readonly=True
@@ -183,52 +180,56 @@ class Task(models.Model):
                 state = '<span style="color:#b818ce">' + state + "</span>"
             partner_ids = []
             if user == self.env.user and reviewer == self.env.user:
-                body = "<p>" + "<strong>" + state + "</strong>: " + escape(subtask_name)
+                body = Markup("<p><strong>" + state + "</strong>: ") + escape(
+                    subtask_name
+                )
             elif self.env.user == reviewer:
                 body = (
-                    "<p>"
+                    Markup("<p>")
                     + escape(user.name)
-                    + ", <br><strong>"
-                    + state
-                    + "</strong>: "
+                    + Markup(", <br><strong>")
+                    + Markup(state)
+                    + Markup("</strong>: ")
                     + escape(subtask_name)
                 )
                 partner_ids = [user.partner_id.id]
             elif self.env.user == user:
                 body = (
-                    "<p>"
+                    Markup("<p>")
                     + escape(reviewer.name)
-                    + ', <em style="color:#999">I updated checklist item assigned to me:</em> <br><strong>'  # noqa: B950
-                    + state
-                    + "</strong>: "
+                    + ", "
+                    + Markup(
+                        '<em style="color:#999">I updated checklist item assigned to me:</em> <br><strong>'  # noqa: B950
+                    )
+                    + Markup(state + "</strong>: ")
                     + escape(subtask_name)
                 )
                 partner_ids = [reviewer.partner_id.id]
             else:
                 body = (
-                    "<p>"
+                    Markup("<p>")
                     + escape(user.name)
                     + ", "
                     + escape(reviewer.name)
-                    + ', <em style="color:#999">I updated checklist item, now its assigned to '
+                    + Markup(
+                        ', <em style="color:#999">I updated checklist item, now its assigned to '  # noqa: B950
+                    )
                     + escape(user.name)
-                    + ": </em> <br><strong>"
-                    + state
-                    + "</strong>: "
+                    + Markup(": </em> <br><strong>")
+                    + Markup(state + "</strong>: ")
                     + escape(subtask_name)
                 )
                 partner_ids = [user.partner_id.id, reviewer.partner_id.id]
             if old_name:
                 body = (
                     body
-                    + '<br><em style="color:#999">Updated from</em><br><strong>'
-                    + state
-                    + "</strong>: "
+                    + Markup('<br><em style="color:#999">Updated from</em><br><strong>')
+                    + Markup(state + "</strong>: ")
                     + escape(old_name)
-                    + "</p>"
+                    + Markup("</p>")
                 )
             else:
-                body = body + "</p>"
+                body = body + Markup("</p>")
             r.message_post(
                 message_type="comment",
                 body=body,
