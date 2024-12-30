@@ -115,6 +115,11 @@
                         name="user"
                         context="{'group_by':'user_id'}"
                     />
+                    <filter
+                        string="State"
+                        name="state"
+                        context="{'group_by':'state'}"
+                    />
                 </group>
             </search>
         </field>
@@ -126,6 +131,7 @@
             <tree>
                 <field name="name" />
                 <field name="user_id" />
+                <field name="state" />
                 <field name="reviewer_id" />
                 <field name="task_id" />
                 <field name="task_state" />
